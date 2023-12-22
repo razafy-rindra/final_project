@@ -79,16 +79,33 @@ structure ProfiniteCompletion (G : Type) [Group G] [TopologicalSpace G] [Topolog
 
 
 /-
-This is the collection of Normal Subgroups of G with finite index. 
+Defining the product of G/N over normal groups N such that [G:N] < ∞, and giving it a group structure.
 -/
 
-def FinIndexNormal (G: Type) [Group G] : Set (Subgroup G):= {H |H.Normal ∧ 0 < H.index }
 
-/-
-Defining the Π (H : FinIndexNormal) G/H
+def ProdGOverN (G: Type) [Group G] [TopologicalSpace G] : Type := (H : Subgroup G) → (hH: Subgroup.Normal H) → (hf: 0< H.index) → G ⧸ H
+
+instance : Group (ProdGOverN G) where
+  mul a b := fun H hH hf => (a H hH hf) * (b H hH hf) 
+  mul_assoc := sorry
+  one := fun H hH hf => 1
+  one_mul := sorry
+  mul_one := sorry
+  inv a := fun H hH hf => (a H hH hf)⁻¹
+  mul_left_inv := sorry
+
+
+/- 
+  Profinite completion is a subgroup of ProdGOverN, such that for all M≤N we have (g N hN hf) ⧸ M = g M hM hf
 -/
 
-def ProdGOverN (G: Type) [Group G] [TopologicalSpace G] [TopologicalGroup G] : Type := (H : FinIndexNormal G) → G ⧸ (H : Subgroup G)
+
+-- def Ghat : Subgroup (ProdGOverN G) where
+--   carrier := {g | ∀ (N M : Subgroup G) (hN : Subgroup.Normal N) (hM : Subgroup.Normal M) (hf : 0 < N.index) (mf : 0 < M.index), 
+--   (g N hN hf) = QuotientGroup.mk (g M hM mf) }
+--   mul_mem' := _
+--   one_mem' := _
+--   inv_mem' := _
 
 
 
