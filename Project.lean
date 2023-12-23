@@ -20,9 +20,10 @@ Let G be a group, F: (G-FSet) -> FSet, be the functor forgetting the G-action
  [] Define the profinite completion of a group G
     (*) Define N := Set of Normal Subgroups of G of finite index
     (*) Define Π_N G/N
-    () Put a group structure on Π_N G/N
-    () Construct profinite completion of G as subgroup of Π_N G/N
-    () put the topology on the profinite completion
+    (*) Put a group structure on Π_N G/N
+    (*) Construct profinite completion of G as subgroup of Π_N G/N
+    (*) Put the topology on the profinite completion
+  [] Show the universal prop of the profinite completion
  [] Show equivalence of cat between G-FSet and Ĝ-FSet
     () Show that f : G ⟶* Perm(X) is a continuous map
     () Then it follows from the universal property 
@@ -83,7 +84,7 @@ Defining the product of G/N over normal groups N such that [G:N] < ∞, and givi
 -/
 
 
-def ProdGOverN (G: Type) [Group G] [TopologicalSpace G] : Type := (H : Subgroup G) → (hH: Subgroup.Normal H) → (hf: 0< H.index) → G ⧸ H
+def ProdGOverN (G: Type) [Group G] : Type := (H : Subgroup G) → (hH: Subgroup.Normal H) → (hf: 0< H.index) → G ⧸ H
 
 instance : Group (ProdGOverN G) where
   mul a b := fun H hH hf => (a H hH hf) * (b H hH hf) 
@@ -111,13 +112,18 @@ def MtoKer {G: Type} [Group G] (N M : Subgroup G) [M.Normal] (f : G→* G⧸M) (
 def incQ {G: Type} [Group G] (N M : Subgroup G) (_ : Subgroup.Normal N) (hM : Subgroup.Normal M) (HL : N≤M) : G⧸N →* G⧸M 
   := QuotientGroup.lift N (inc M hM) (MtoKer _ _ _ HL)
 
-def Ghat : Subgroup (ProdGOverN G) where
+def Ghat (G: Type) [Group G] : Subgroup (ProdGOverN G) where
   carrier := {g | ∀ (N M : Subgroup G) (hN : Subgroup.Normal N) 
   (hM : Subgroup.Normal M) (hf : 0 < N.index) (mf : 0 < M.index) (HL : N≤M), 
   (incQ _ _ hN hM HL (g N hN hf)) = (g M hM mf) }
   mul_mem' := sorry
   one_mem' := sorry
   inv_mem' := sorry
+
+/-
+  The topology on Ghat is the product topology, where G is given the discrete topology. 
+-/
+instance : (TopologicalSpace (Ghat G)) := inferInstance
 
 
 
