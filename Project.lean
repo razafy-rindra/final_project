@@ -24,6 +24,10 @@ Let G be a group, F: (G-FSet) -> FSet, be the functor forgetting the G-action
     (*) Construct profinite completion of G as subgroup of Π_N G/N
     (*) Put the topology on the profinite completion
   [] Show the universal prop of the profinite completion
+    () Define ι : G →* Ghat
+    () Define lift
+    () Show ι∘lift = f
+    () Show uniqueness
  [] Show equivalence of cat between G-FSet and Ĝ-FSet
     () Show that f : G ⟶* Perm(X) is a continuous map
     () Then it follows from the universal property 
@@ -100,7 +104,6 @@ instance : Group (ProdGOverN G) where
   Profinite completion is a subgroup of ProdGOverN, such that for all M≤N we have (g N hN hf) ⧸ M = g M hM hf
 -/
 
-
 def inc {G: Type} [Group G] (M : Subgroup G) (_ : Subgroup.Normal M) : G →* G⧸M where
   toFun x := QuotientGroup.mk x
   map_one' := by simp only [OneMemClass.coe_one, QuotientGroup.mk_one]
@@ -124,6 +127,23 @@ def Ghat (G: Type) [Group G] : Subgroup (ProdGOverN G) where
   The topology on Ghat is the product topology, where G is given the discrete topology. 
 -/
 instance : (TopologicalSpace (Ghat G)) := inferInstance
+
+def ιG {G: Type} [Group G] : G →* (Ghat G) where
+  toFun x := {
+    val := fun H hH hf => QuotientGroup.mk x
+    property := by
+      intro N M hN hM hf mf HL
+      dsimp
+      congr
+      done
+  }
+  map_one' := by
+    simp only [QuotientGroup.mk_one, Subgroup.mk_eq_one_iff]
+    congr
+  map_mul' := by
+    intro x y
+    simp only [QuotientGroup.mk_mul]
+    congr
 
 
 
