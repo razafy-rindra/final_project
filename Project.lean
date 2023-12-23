@@ -100,12 +100,24 @@ instance : Group (ProdGOverN G) where
 -/
 
 
--- def Ghat : Subgroup (ProdGOverN G) where
---   carrier := {g | ∀ (N M : Subgroup G) (hN : Subgroup.Normal N) (hM : Subgroup.Normal M) (hf : 0 < N.index) (mf : 0 < M.index), 
---   (g N hN hf) = QuotientGroup.mk (g M hM mf) }
---   mul_mem' := _
---   one_mem' := _
---   inv_mem' := _
+def inc {G: Type} [Group G] (M : Subgroup G) (_ : Subgroup.Normal M) : G →* G⧸M where
+  toFun x := QuotientGroup.mk x
+  map_one' := by simp only [OneMemClass.coe_one, QuotientGroup.mk_one]
+  map_mul' := by simp only [Submonoid.coe_mul, Subgroup.coe_toSubmonoid, QuotientGroup.mk_mul,
+    Subtype.forall, implies_true, forall_const]
+
+def MtoKer {G: Type} [Group G] (N M : Subgroup G) [M.Normal] (f : G→* G⧸M) (HL : N≤M) : N ≤ f.ker := sorry
+
+def incQ {G: Type} [Group G] (N M : Subgroup G) (_ : Subgroup.Normal N) (hM : Subgroup.Normal M) (HL : N≤M) : G⧸N →* G⧸M 
+  := QuotientGroup.lift N (inc M hM) (MtoKer _ _ _ HL)
+
+def Ghat : Subgroup (ProdGOverN G) where
+  carrier := {g | ∀ (N M : Subgroup G) (hN : Subgroup.Normal N) 
+  (hM : Subgroup.Normal M) (hf : 0 < N.index) (mf : 0 < M.index) (HL : N≤M), 
+  (incQ _ _ hN hM HL (g N hN hf)) = (g M hM mf) }
+  mul_mem' := sorry
+  one_mem' := sorry
+  inv_mem' := sorry
 
 
 
