@@ -8,8 +8,6 @@ import Mathlib.CategoryTheory.FintypeCat
 import Mathlib.CategoryTheory.Iso
 import Mathlib.GroupTheory.Index
 import Mathlib.Topology.Category.Profinite.Basic
-
-
 /-
 # In this document we will prove the following:
 
@@ -18,7 +16,7 @@ import Mathlib.Topology.Category.Profinite.Basic
 ## What is left to do?
 
   [] Show the universal prop of the profinite completion
-    () Define ι : G →* Ghat
+    (*) Define ι : G →* Ghat
     () Define lift
     () Show ι∘lift = f
     () Show uniqueness
@@ -43,15 +41,19 @@ noncomputable section
 /- 
 # Preamble
 
-We first give an instance of TopologicalSpace on G, by putting the discrete topology on it. And we show that this is makes G a topological group.
-
+Put a topology on G
 -/
 
 instance : TopologicalSpace G := ⊥
 
+instance : DiscreteTopology G where
+  eq_bot := by rfl
+
 instance : TopologicalGroup G where
-  continuous_mul := sorry
-  continuous_inv := sorry
+  continuous_mul := by
+    apply continuous_of_discreteTopology
+  continuous_inv := by
+    apply continuous_of_discreteTopology
 
 
 /-
@@ -99,13 +101,25 @@ Defining Π G/N over normal groups N such that [G:N] < ∞, and giving it a grou
 -/
 def ProdGOverN (G: Type) [Group G] : Type := (H : Subgroup G) → (hH: Subgroup.Normal H) → (hf: 0< H.index) → G ⧸ H
 
-instance : Group (ProdGOverN G) where
+instance : Mul (ProdGOverN G) where
   mul a b := fun H hH hf => (a H hH hf) * (b H hH hf) 
-  mul_assoc := sorry
-  one := fun H hH hf => 1
-  one_mul := sorry
-  mul_one := sorry
+
+instance : One (ProdGOverN G) where
+  one := fun _ _ _ => 1
+
+instance : Inv (ProdGOverN G) where
   inv a := fun H hH hf => (a H hH hf)⁻¹
+
+
+instance : Group (ProdGOverN G) where
+  mul_assoc := by
+    intro a b c
+    
+    sorry
+  one_mul := by
+    intro a
+    sorry
+  mul_one := sorry
   mul_left_inv := sorry
 
 
@@ -119,7 +133,11 @@ def inc {G: Type} [Group G] (M : Subgroup G) (_ : Subgroup.Normal M) : G →* G�
   map_mul' := by simp only [Submonoid.coe_mul, Subgroup.coe_toSubmonoid, QuotientGroup.mk_mul,
     Subtype.forall, implies_true, forall_const]
 
-def MtoKer {G: Type} [Group G] (N M : Subgroup G) [M.Normal] (f : G→* G⧸M) (HL : N≤M) : N ≤ f.ker := sorry
+def MtoKer {G: Type} [Group G] (N M : Subgroup G) [M.Normal] (f : G→* G⧸M) (HL : N≤M) : N ≤ f.ker := by
+  intro x h 
+  change f x = 1
+  
+  sorry
 
 def incQ {G: Type} [Group G] (N M : Subgroup G) (_ : Subgroup.Normal N) (hM : Subgroup.Normal M) (HL : N≤M) : G⧸N →* G⧸M 
   := QuotientGroup.lift N (inc M hM) (MtoKer _ _ _ HL)
@@ -128,24 +146,28 @@ def incQ {G: Type} [Group G] (N M : Subgroup G) (_ : Subgroup.Normal N) (hM : Su
 /-
   The underlying group structure of the profinite completion.
 -/
-def Ghat (G: Type) [Group G] : Subgroup (ProdGOverN G) where
+def X (G: Type) [Group G] : Subgroup (ProdGOverN G) where
   carrier := {g | ∀ (N M : Subgroup G) (hN : Subgroup.Normal N) 
   (hM : Subgroup.Normal M) (hf : 0 < N.index) (mf : 0 < M.index) (HL : N≤M), 
   (incQ _ _ hN hM HL (g N hN hf)) = (g M hM mf) }
-  mul_mem' := sorry
+  mul_mem' := by 
+    simp only [Set.mem_setOf_eq]
+    intro a b g1 g2 N M hN hM hf mf HL
+    
+    sorry
   one_mem' := sorry
   inv_mem' := sorry
 
 /-
   The topology on Ghat is the product topology, where G is given the discrete topology. 
 -/
-instance : (TopologicalSpace (Ghat G)) := inferInstance
-
+instance : (TopologicalSpace (X G)) := inferInstance
+instance : (TopologicalGroup (X G)) := inferInstance
 
 /-
   The inclusion homomorphism ιG : G →* Ghat
 -/
-def ιG {G: Type} [Group G] : G →* (Ghat G) where
+def ιG {G: Type} [Group G] : G →* (X G) where
   toFun x := {
     val := fun H _ _ => QuotientGroup.mk x
     property := by
@@ -162,14 +184,55 @@ def ιG {G: Type} [Group G] : G →* (Ghat G) where
     simp only [QuotientGroup.mk_mul]
     congr
 
-def lift (Y G : Type) [Group Y] [TopologicalSpace Y] [TopologicalGroup Y] 
-  [Group G] [TopologicalSpace G] [TopologicalGroup G] : (G →* Y) → ((Ghat G) →* Y) := sorry
+
+def lift (Y : Type) {G : Type} [Group G] [Group Y] [TopologicalSpace Y] [CompactSpace Y] [TotallyDisconnectedSpace Y] [TopologicalGroup Y] 
+    (f: G →* Y)
+    (hf : Continuous f) : ((X G) →* Y) where
+      toFun := sorry
+      map_one' := sorry
+      map_mul' := sorry
     
+def Ghat : ProfiniteCompletion G where
+  X := X G
+  Gpinst := inferInstance
+  Topinst := inferInstance
+  ι := ιG
+  lift Y _ _ _ _  _ f hf := lift Y f hf 
+  ι_lift := by
+    intro Y _ _ _ _ _ f hf
+    dsimp
+    ext
+    simp
+    sorry -- I need the definition of lift!
+  unique := by
+    intro Y _ _ _ _ _ f hf cf chf e 
+    -- probably show this by using the fact that im(ιG) is dense in Ghat?
+    sorry
+    
+
+/-
+For some reason, I can't find the category of G-Sets, let alone G-FSets. So I'll define them myself? Maybe they have another name.
+-/
+
+
+/- 
+# Definition of the automorphism group of a functor. 
+
+Aut(F) = {μ : F→F | μ is a natural transformation} 
+-/
+
+instance : Mul (NatTrans F F) where
+  mul a b := NatTrans.vcomp a b
+
+local notation "Aut(F)" => MulAut (NatTrans F F)
+
+
 
 
 /-
-For some reason, I can't find the category of G-Sets, let alone G-FSets. So I'll define them myself.
+  The rest of this document consists of placeholder lemma's/defintions 
 -/
+
 
 /-
 Let X be a G-Set, then G embeds in Perm(X), this lemma will just say that this map is indeed a continuous homomorphism
@@ -188,27 +251,6 @@ def GFsetEquivGCFset {G : Type} [Group G] [TopologicalSpace G] :
   G = G := rfl
 
 --- After this, the rest should just be computation.
-
-/- 
-Definition of the automorphism group of a functor. 
-
--/
-
-instance : Mul (NatTrans F F) where
-  mul a b := NatTrans.vcomp a b
-
-local notation "Aut(F)" => MulAut (NatTrans F F)
-
-
-
-/-
-Just a sanity check that everything is working fine.
-
-lemma test (f g : Aut(F)) :
-  (f*g)⁻¹ = g⁻¹*f⁻¹ := by
-    simp only [mul_inv_rev]
-
--/
 
 
 /-
